@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>經濟日報新聞爬蟲</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 0 60px;
+        }
+        p {
+            font-size: 18px;
+        }
+        #news-result {
+            position: relative;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            height: 400px;
+            overflow-y: auto;
+            
+        }
+        button {
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #copy-button, #clear-button {
+            position: relative;
+            margin-top: 20px;
+        }
+        #copy-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        #result-content {
+            padding: 10px;
+            margin-top: -20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>經濟日報新聞爬蟲</h1>
+    <p>自動爬取經濟日報首頁上的所有新聞內容，並顯示結果。</p>
+
+    <button onclick="startScraping()">開始爬取新聞</button>
+
+    <div id="news-result">
+        <button id="copy-button" onclick="copyResult()">複製</button>
+        <div id="result-content"></div>
+    </div>
+    <button id="clear-button" onclick="clearResult()">清除</button>
+
+    <script>
+        let loadingInterval;
+
+        function setLoadingMessage(message) {
+            const loadingText = document.getElementById('loading-text');
+            let dots = 0;
+            loadingInterval = setInterval(() => {
+                dots = (dots + 1) % 4;
+                const dotsText = ".".repeat(dots);
+                const spaces = "\u00A0".repeat(3 - dots);
+                loadingText.innerHTML = `<strong>${message}${dotsText}${spaces}</strong>`;
+            }, 500);
+        }
+
+        function startScraping() {
+            const resultDiv = document.getElementById('result-content');
+            resultDiv.innerHTML = '<div id="loading-text"></div>';
+            setLoadingMessage("爬取中，請稍候");
+
+            fetch('/scrape')
+                .then(response => response.json())
+                .then(data => {
+                    clearInterval(loadingInterval);
+                    resultDiv.textContent = JSON.stringify(data, null, 4);
+                })
+                .catch(handleError);
+        }
+
+        function handleError(error) {
+            clearInterval(loadingInterval);
+            document.getElementById('result-content').textContent = '發生錯誤：' + error;
+        }
+
+        function copyResult() {
+            const resultContent = document.getElementById('result-content').textContent;
+            navigator.clipboard.writeText(resultContent).catch(() => {
+            });
+        }
+
+        function clearResult() {
+            clearInterval(loadingInterval);
+            document.getElementById('result-content').textContent = '';
+        }
+    </script>
+</body>
+</html>
